@@ -1,0 +1,9 @@
+status,status_name
+H,Sales Order : Closed
+C,Sales Order : Cancelled
+A,Sales Order : Pending Approval
+B,Sales Order : Pending Fulfillment
+E,Sales Order : Pending Billing/Partially Fulfilled
+F,Sales Order : Pending Billing
+G,Sales Order : Billed
+D,Sales Order : Partially Fulfilled
