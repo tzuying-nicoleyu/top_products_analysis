@@ -1,0 +1,54 @@
+name: Invoice Top Items Export
+
+on:
+  # Run on a schedule — every Monday at 8am UTC
+  schedule:
+    - cron: "0 8 * * 1"
+
+  # Also allow manual runs from the GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      months:
+        description: "Months to look back (e.g. 3, 6, 12)"
+        required: false
+        default: "6"
+      days:
+        description: "Days to look back — overrides months if set"
+        required: false
+        default: ""
+
+jobs:
+  run-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install google-cloud-bigquery pandas db-dtypes pyarrow
+
+      - name: Write BigQuery service account key
+        run: echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > gcp_key.json
+
+      - name: Run analysis
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: gcp_key.json
+        run: |
+          if [ -n "${{ github.event.inputs.days }}" ]; then
+            python invoice_top_items.py --days ${{ github.event.inputs.days }}
+          else
+            python invoice_top_items.py --months ${{ github.event.inputs.months || '6' }}
+          fi
+
+      - name: Upload CSV as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: top-items-csv
+          path: output/*.csv
+          retention-days: 30
